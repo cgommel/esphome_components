@@ -86,7 +86,7 @@ std::string bytes_repr(const bytes &buffer) {
 
 std::string unit_repr(const uint8_t unit)
 {
-  // source : https: // www.dlms.com/files/Blue-Book-Ed-122-Excerpt.pdf
+  // source : https://www.dlms.com/files/Blue-Book-Ed-122-Excerpt.pdf
   switch (unit)
   {
   case 1:
