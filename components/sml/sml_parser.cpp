@@ -88,7 +88,7 @@ std::string bytes_to_serverid(const bytes &buffer) {
   std::string repr;
   int sz = buffer.size();
   //Modern Meters use this format
-  if ((10 == sz) && (buffer.at(0)==0x0a)) {
+  if ((10 == sz) && (buffer.at(0)>=0x09)) {
     // Type of Meter (1=electricity)
     uint8_t meter_type = buffer.at(1) % 10;
     // Manufacturer ID (https://www.dlms.com/flag-id/flag-id-list)
