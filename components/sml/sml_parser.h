@@ -25,7 +25,7 @@ class ObisInfo {
   bytes code;
   bytes status;
   char unit;
-  char scaler;
+  int8_t scaler;
   bytes value;
   uint16_t value_type;
   std::string code_repr() const;
@@ -44,6 +44,8 @@ class SmlFile {
 };
 
 std::string bytes_repr(const bytes &buffer);
+
+std::string unit_repr(const uint8_t unit);
 
 std::string bytes_to_serverid(const bytes &buffer);
 
