@@ -1,6 +1,7 @@
 #include "sml.h"
 #include "esphome/core/log.h"
 #include "sml_parser.h"
+#include "esphome/core/helpers.h"
 
 namespace esphome {
 namespace sml {
@@ -61,13 +62,39 @@ void Sml::process_sml_file_(const bytes &sml_data) {
   this->log_obis_info_(obis_info);
 }
 
-void Sml::log_obis_info_(const std::vector<ObisInfo> &obis_info_vec) {
+void Sml::log_obis_info_(const std::vector<ObisInfo> &obis_info_vec)
+{
   ESP_LOGD(TAG, "OBIS info:");
-  for (auto const &obis_info : obis_info_vec) {
+  for (auto const &obis_info : obis_info_vec)
+  {
     std::string info;
-    info += "  (" + bytes_to_serverid(obis_info.server_id) +"/" + bytes_repr(obis_info.server_id) +") ";
+    info += "  (" + bytes_to_serverid(obis_info.server_id) + "/" + bytes_repr(obis_info.server_id) + ") ";
     info += obis_info.code_repr();
     info += " [0x" + bytes_repr(obis_info.value) + "]";
+    info += str_sprintf(" scaler=%i ", obis_info.scaler);
+    info += " unit=" + unit_repr(obis_info.unit);
+    if ((obis_info.value_type == SML_INT) || (obis_info.value_type == SML_UINT))
+    {
+        double value_f = 0;
+        if (obis_info.value_type == SML_INT)
+          value_f = (double)bytes_to_int(obis_info.value);
+        else
+          value_f = (double)bytes_to_uint(obis_info.value);
+        int8_t exp = obis_info.scaler;
+        while ((exp) > 0)
+        {
+          value_f *= 10;
+          exp--;
+        }
+        while ((exp) < 0)
+        {
+          value_f /= 10;
+          exp++;
+        }
+        info += str_sprintf(" value=%f ", value_f) + unit_repr(obis_info.unit);
+    }
+    else
+        info += " value=" + bytes_repr(obis_info.value);
     ESP_LOGD(TAG, "%s", info.c_str());
   }
 }

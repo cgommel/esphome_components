@@ -84,6 +84,155 @@ std::string bytes_repr(const bytes &buffer) {
   return repr;
 }
 
+std::string unit_repr(const uint8_t unit)
+{
+  // source : https: // www.dlms.com/files/Blue-Book-Ed-122-Excerpt.pdf
+  switch (unit)
+  {
+  case 1:
+    return ("a");
+  case 2:
+    return ("mo");
+  case 3:
+    return ("wk");
+  case 4:
+    return ("d");
+  case 5:
+    return ("h");
+  case 6:
+    return ("min");
+  case 7:
+    return ("s");
+  case 8:
+    return ("°");
+  case 9:
+    return ("°C");
+  case 10:
+    return ("currency");
+  case 11:
+    return ("m");
+  case 12:
+    return ("m/s");
+  case 13:
+    return ("m^3");
+  case 14:
+    return ("m^3");
+  case 15:
+    return ("m^3/h");
+  case 16:
+    return ("m^3/d");
+  case 17:
+    return ("m^3/d");
+  case 18:
+    return ("m^3/d");
+  case 19:
+    return ("l");
+  case 20:
+    return ("kg");
+  case 21:
+    return ("N");
+  case 22:
+    return ("Nm");
+  case 23:
+    return ("Pa");
+  case 24:
+    return ("bar");
+  case 25:
+    return ("J");
+  case 26:
+    return ("J/h");
+  case 27:
+    return ("W");
+  case 28:
+    return ("Va");
+  case 29:
+    return ("var");
+  case 30:
+    return ("Wh");
+  case 31:
+    return ("VAh");
+  case 32:
+    return ("varh");
+  case 33:
+    return ("A");
+  case 34:
+    return ("C");
+  case 35:
+    return ("V");
+  case 36:
+    return ("V/m");
+  case 37:
+    return ("F");
+  case 38:
+    return ("Ohm");
+  case 39:
+    return ("Ohm*m^2/m");
+  case 40:
+    return ("Wb");
+  case 41:
+    return ("T");
+  case 42:
+    return ("A/m");
+  case 43:
+    return ("H");
+  case 44:
+    return ("Hz");
+  case 45:
+    return ("1/(Wh)");
+  case 46:
+    return ("1/(varh)");
+  case 47:
+    return ("1/(VAh)");
+  case 48:
+    return ("V^2*h");
+  case 49:
+    return ("A^2*h");
+  case 50:
+    return ("kg/s");
+  case 51:
+    return ("S"); // a.k.a. mho
+  case 52:
+    return ("K");
+  case 53:
+    return ("1/(V^2*h)");
+  case 54:
+    return ("1/(A^2*h)");
+  case 55:
+    return ("1/m^3");
+  case 56:
+    return ("%");
+  case 57:
+    return ("Ah");
+  case 60:
+    return ("Wh/m^3");
+  case 61:
+    return ("J/m^3");
+  case 62:
+    return ("Mol %");
+  case 63:
+    return ("g/m^3");
+  case 64:
+    return ("Pa*s");
+  case 65:
+    return ("J/kg");
+  case 70:
+    return ("dBm");
+  case 71:
+    return ("dBuV");
+  case 72:
+    return ("dB");
+
+  case 253:
+    return ("(reserved)");
+  case 254:
+    return ("(other)");
+  case 255:
+    return ("");
+  default:
+    return str_sprintf("(Unit %u)", unit);
+  }
+}
+
 // Full decoding compliant to "FNN Lastenheft SMGW, Funktionale Merkmale Juni 2014"
 std::string bytes_to_serverid(const bytes &buffer)
 {
