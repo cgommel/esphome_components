@@ -78,6 +78,7 @@ std::vector<ObisInfo> SmlFile::get_obis_info() {
 std::string bytes_repr(const bytes &buffer) {
   std::string repr;
   int sz=buffer.size();
+  int sz=buffer.size();
   for (auto const value : buffer) {
     repr += str_sprintf("%02x", value & 0xff);
   }
