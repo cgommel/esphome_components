@@ -84,43 +84,107 @@ std::string bytes_repr(const bytes &buffer) {
   return repr;
 }
 
-std::string bytes_to_serverid(const bytes &buffer) {
+// Full decoding compliant to "FNN Lastenheft SMGW, Funktionale Merkmale Juni 2014"
+std::string bytes_to_serverid(const bytes &buffer)
+{
   std::string repr;
   int sz = buffer.size();
-  //Modern Meters use this format
-  if ((10 == sz) && (buffer.at(0)>=0x09)) {
-    // Type of Meter (1=electricity)
-    uint8_t meter_type = buffer.at(1) % 10;
-    // Manufacturer ID (https://www.dlms.com/flag-id/flag-id-list)
-    uint8_t manufacturer_id[] = {buffer.at(2), buffer.at(3), buffer.at(4), 0};
-    // Fabrication block (hex)
-    uint8_t fabrication_block = buffer.at(5);
-    // Fabrication number (decimal)
-    uint32_t fabrication_number = (((uint32_t)buffer.at(6)) << 24) | (((uint32_t)buffer.at(7)) << 16) | (((uint32_t)buffer.at(8)) << 8) | (uint32_t)buffer.at(9);
-    fabrication_number %= 100000000;
-    repr += str_sprintf("%u%s%02X%08zu", meter_type, manufacturer_id, fabrication_block, fabrication_number); // e.g. 1ABC0012345678 spaces removed
-    return repr;
-  }
-  //Old EDL21 meters send it a little bit different
-  if ((10 == sz) && (buffer.at(0)==0x06)) {
-    uint64_t temp = (((uint64_t)buffer[4]) << 40) | (((uint64_t)buffer[5]) << 32) | (((uint64_t)buffer[6]) << 24) | (((uint64_t)buffer[7]) << 16) | (((uint64_t)buffer[8]) << 8) | (uint64_t)buffer[9];
-    char tempStr[16];
-    sprintf(tempStr, "%llu", temp);
-    uint8_t pos = 5;
-    while (tempStr[pos] == '0')
-      pos++;
-    repr += str_sprintf( "%c%c%c%c%c%c%c%c%s", tempStr[0], buffer[1], buffer[2], buffer[3], tempStr[1], tempStr[2], tempStr[3], tempStr[4], tempStr + pos);
-    return repr;
-  }
-  
+  if (sz < 1)
+    return "EMPTY";
+  uint8_t Byte0 = buffer[0];
 
-  repr += str_sprintf("(len=%i) ", sz);
+  // 0x03: Rhein-Energie: 18 BCD digits
+  if ((0x04 == Byte0) && (10 == sz))
+  {
+    uint64_t temp = 0;
+    for (int i = 1; i <= 9; i++)
+      repr += str_sprintf("%02x", buffer[i]);
+    return repr;
+  }
+
+  // 0x04: EON: 16-decimal digits
+  if ((0x04 == Byte0) && (8 == sz))
+  {
+    uint64_t temp = 0;
+    for (int i = 1; i <= 7; i++)
+      temp = (temp << 8) | (uint64_t)buffer[i];
+    repr += str_sprintf("%016zu", temp);
+    return repr;
+  }
+
+  // 0x05: MAC-Address
+  if ((0x05 == Byte0) && (7 == sz))
+  {
+    uint64_t temp = 0;
+    for (int i = 1; i <= 5; i++)
+      repr += str_sprintf("%02x:", buffer[i]);
+    repr += str_sprintf("%02x:", buffer[6]);
+    return repr;
+  }
+
+  // E DIN 43863-5 rev. 02/2010
+  if ((0x06 == Byte0) && (10 == sz))
+  {
+    uint64_t temp = 0;
+    for (int i = 4; i <= 9; i++)
+      temp = (temp << 8) | (uint64_t)buffer[i];
+    // Manufacturer ID (https://www.dlms.com/flag-id/flag-id-list)
+    uint8_t manufacturer_id[] = {buffer[1], buffer[2], buffer[3], 0};
+    uint8_t meter_type = ((uint8_t)(temp / 1000000000000)) & 0x0f;
+    temp = temp % 1000000000000;
+    uint16_t fabrication_block = (uint16_t)(temp / 100000000);
+    uint32_t fabrication_number = (uint32_t)(temp % 100000000);
+    repr += str_sprintf("%01X%s%04u%08zu", meter_type, manufacturer_id, fabrication_block, fabrication_number);
+    return repr;
+  }
+
+  // 0x07: IMEI: 15-decimal digits
+  if ((0x07 == Byte0) && (8 == sz))
+  {
+    uint64_t temp = 0;
+    for (int i = 1; i <= 7; i++)
+      temp = (temp << 8) | (uint64_t)buffer[i];
+    repr += str_sprintf("%015zu", temp);
+    return repr;
+  }
+
+  // 0x08: RWE: 14 digits in format xxxxxx-yyyyyyy
+  if ((0x08 == Byte0) && (8 == sz) && (45 == buffer[4]))
+  {
+    uint32_t xxxxxx = 0;
+    uint32_t yyyyyyy = 0;
+
+    for (int i = 1; i <= 3; i++)
+      xxxxxx = (xxxxxx << 8) | (uint32_t)buffer[i];
+    for (int i = 5; i <= 7; i++)
+      yyyyyyy = (yyyyyyy << 8) | (uint32_t)buffer[i];
+
+    repr += str_sprintf("%06u-%07u", xxxxxx, yyyyyyy);
+    return repr;
+  }
+
+  // E DIN 43863-5 rev. 07/2010 or rev. 04/2012
+  if (((0x09 == Byte0) || (0x0a == Byte0)) && (10 == sz))
+  {
+    // Type of Meter (1=electricity)
+    uint8_t meter_type = buffer[1] & 0x0f;
+    // Manufacturer ID (https://www.dlms.com/flag-id/flag-id-list)
+    uint8_t manufacturer_id[] = {buffer[2], buffer[3], buffer[4], 0};
+    // Fabrication block (hex)
+    uint8_t fabrication_block = buffer[5];
+    // Fabrication number (decimal)
+    uint32_t fabrication_number = (((uint32_t)buffer[6]) << 24) | (((uint32_t)buffer[7]) << 16) | (((uint32_t)buffer[8]) << 8) | (uint32_t)buffer[9];
+    fabrication_number %= 100000000;
+    repr += str_sprintf("%01X%s%02X%08zu", meter_type, manufacturer_id, fabrication_block, fabrication_number); // e.g. 1ABC0012345678 spaces removed
+    return repr;
+  }
+
+  repr += str_sprintf("(type=%02x len=%i) ", Byte0, sz);
   for (auto const value : buffer)
   {
     repr += str_sprintf("%02x", value & 0xff);
   }
   return repr;
- 
 }
 
 uint64_t bytes_to_uint(const bytes &buffer) {
