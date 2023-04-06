@@ -134,7 +134,7 @@ std::string bytes_to_serverid(const bytes &buffer)
     temp = temp % 1000000000000;
     uint16_t fabrication_block = (uint16_t)(temp / 100000000);
     uint32_t fabrication_number = (uint32_t)(temp % 100000000);
-    repr += str_sprintf("%01X%s%04u%08llu", meter_type, manufacturer_id, fabrication_block, fabrication_number);
+    repr += str_sprintf("%01X%s%04u%08lu", meter_type, manufacturer_id, fabrication_block, fabrication_number);
     return repr;
   }
 
@@ -175,7 +175,7 @@ std::string bytes_to_serverid(const bytes &buffer)
     // Fabrication number (decimal)
     uint32_t fabrication_number = (((uint32_t)buffer[6]) << 24) | (((uint32_t)buffer[7]) << 16) | (((uint32_t)buffer[8]) << 8) | (uint32_t)buffer[9];
     fabrication_number %= 100000000;
-    repr += str_sprintf("%01X%s%02X%08llu", meter_type, manufacturer_id, fabrication_block, fabrication_number); // e.g. 1ABC0012345678 spaces removed
+    repr += str_sprintf("%01X%s%02X%08lu", meter_type, manufacturer_id, fabrication_block, fabrication_number); // e.g. 1ABC0012345678 spaces removed
     return repr;
   }
 
